@@ -1,7 +1,8 @@
 (ns cljs-google-signin.component
   (:require-macros [cljs.core.async.macros :as a])
   (:require [cljs.core.async :as a]
-            [rum.core :as r]))
+            [rum.core :as r]
+            [goog.dom :as dom]))
 
 (defn- <cb
   "Call an callback style function and return a channel containing the result of calling the callback"
@@ -37,26 +38,45 @@
   [state]
   (-> state :rum/react-component js/ReactDOM.findDOMNode))
 
-(def ^:private button
-  "On mount, render a google sign-in button"
-  {:did-mount (fn [state]
-                (let [[& {:keys [on-success on-failure]}] (:rum/args state)]
-                  (render-signin-button (get-dom-node state)
-                                        :on-success on-success
-                                        :on-failure on-failure))
-                state)})
+(defn- <load-script [url]
+  (a/go (let [s (dom/createElement "script")]
+          (set! (.-src s) url)
+          (let [loaded (<cb (fn [cb] (set! (.-onload s) cb)))]
+            (.appendChild (.-body js/document) s)
+            (a/<! loaded)))))
 
-(defn <init-gapi!
+(defn- <init-gapi!
   "Initialise gapi library"
   [client-id]
+  (assert client-id)
   (a/go
     (a/<! (<cb js/gapi.load "auth2"))
     (a/<! (<promise js/gapi.auth2.init #js {:client_id client-id}))))
+
+(defn- <ensure-gapi!
+  "Ensure that the gapi script is loaded and initialised"
+  [client-id]
+  (a/go
+    (when-not (exists? js/gapi)
+      (a/<! (<load-script "https://apis.google.com/js/platform.js")))
+    (a/<! (<init-gapi! client-id))))
+
+(def ^:private button
+  "On mount, render a google sign-in button"
+  {:did-mount (fn [state]
+                (let [el (get-dom-node state)]
+                  (a/go
+                    (let [[& {:keys [client-id on-success on-failure]}] (:rum/args state)]
+                      (a/<! (<ensure-gapi! client-id))
+                      (render-signin-button el
+                                            :on-success on-success
+                                            :on-failure on-failure))))
+                state)})
 
 (defn <sign-out!
   "Sign user out of gapi session"
   []
   (<promise #(.signOut (js/gapi.auth2.getAuthInstance))))
 
-(r/defc signin-button < button [& {:keys [on-success on-failure]}]
+(r/defc signin-button < button [& {:keys [client-id on-success on-failure]}]
   [:div])
