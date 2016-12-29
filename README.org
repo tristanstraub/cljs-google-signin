@@ -1,0 +1,49 @@
+Client side sign in button:
+
+#+BEGIN_SRC clojurescript
+  (ns example.client
+    (:require-macros [cljs.core.async.macros :as a])
+    (:require [rum.core :as r]
+              [goog.dom :as dom]
+              [cljs.core.async :as a]
+              [cljs-google-signin.component :as gapi]))
+
+  (enable-console-print!)
+
+  (def client-id "YOUR_CLIENT_ID.apps.googleusercontent.com")
+
+  (r/defc ui []
+    [:div
+     (gapi/signin-button :client-id client-id
+                         :on-success (fn [google-user]
+                                       (println :token (.. google-user (getAuthResponse) -id_token)))
+                         :on-failure println)
+     [:a {:href "#" :on-click (fn [_] (a/go (println (a/<! (<gapi/sign-out!)))))}
+      "Sign out"]])
+
+  (defn render []
+    (r/mount (ui) (dom/getElement "root")))
+#+END_SRC
+
+Server side token verification:
+
+#+BEGIN_SRC clojure
+  (ns example.server
+    (:import [com.google.api.client.googleapis.auth.oauth2
+              GoogleIdToken
+              GoogleIdToken$Payload
+              GoogleIdTokenVerifier$Builder
+              GoogleIdTokenVerifier]
+             [com.google.api.client.json.jackson2.JacksonFactory]
+             [com.google.api.client.http.javanet.NetHttpTransport]))
+
+  (defn verify-token [client-id token]
+    "Returns GoogleTokenId instance if the token is valid"
+    (let [jsonFactory (com.google.api.client.json.jackson2.JacksonFactory.)
+          transport   (com.google.api.client.http.javanet.NetHttpTransport.)
+          v           (.. (GoogleIdTokenVerifier$Builder. transport jsonFactory)
+                          (setAudience (list client-id))
+                          (build))]
+
+      (.verify v token)))
+#+END_SRC
