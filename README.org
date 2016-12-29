@@ -1,5 +1,7 @@
 Client side sign in button:
 
+#+HTML: <a href="https://clojars.org/com.tristanstraub/cljs-google-signin"><img href="https://img.shields.io/clojars/v/com.tristanstraub/cljs-google-signin.svg"/></a>
+
 #+BEGIN_SRC clojurescript
   (ns example.client
     (:require-macros [cljs.core.async.macros :as a])
