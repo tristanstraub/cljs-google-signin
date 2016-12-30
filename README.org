@@ -1,4 +1,4 @@
-#+HTML: <a href="https://clojars.org/com.tristanstraub/cljs-google-signin"><img href="https://img.shields.io/clojars/v/com.tristanstraub/cljs-google-signin.svg"></a>
+[[https://clojars.org/com.tristanstraub/cljs-google-signin][https://img.shields.io/clojars/v/com.tristanstraub/cljs-google-signin.svg]]
 
 Client side sign in button:
 
