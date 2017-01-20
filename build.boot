@@ -14,7 +14,7 @@
 (task-options!
   pom {:project     'com.tristanstraub/cljs-google-signin
        :version     +version+
-       :description "Google signin button wrapped with rum"
+       :description "Clojurescript google sign-in button"
        :url         "https://github.com/tristanstraub/cljs-google-signin"
        :scm         {:url "https://github.com/tristanstraub/cljs-google-signin"}
        :license     {"MIT" "https://opensource.org/licenses/MIT"}})
